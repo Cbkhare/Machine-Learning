@@ -1,0 +1,26 @@
+Addition of Octave kernel to iPython:-
+
+1) pip install octave_kernel 
+ 
+	after this octave kernel will be visible in New console of Ipython 
+
+2) pip install Oct2py 
+
+3) Launced and faced the OS error 
+
+4) Installed Octave 4.0.2 from its website, 
+
+5) system and user environments variable will be automaticall added in PATH. 
+	Note:- OCTAVE_EXECUTABLE is given more priority than Path so make sure
+		it points to correct place 
+
+6) Lanced and faced error while plotting
+
+7) Downloaded and installed GNUPLOT from its website 
+
+8) launced and faced error of permision denied 
+
+9) corrected environement path variable to point exec of gnuplot in GNUPLOT folder
+
+10) so far everything works correct 
+

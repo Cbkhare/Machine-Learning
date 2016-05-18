@@ -1,0 +1,261 @@
+Steps:- 
+
+1: The competition
+
+We'll be learning how to generate a submission for a Kaggle competition. Kaggle is a site where you create algorithms, and compete against machine learning practitioners around the world. Your algorithm wins if it's the most accurate on a given dataset. Kaggle is a fun way to practice your machine learning skills.
+
+Kaggle has several different competitions on their site. On of them is about predicting which passengers survived the sinking of the Titanic. In this and the next mission, we'll be learning how to make our first submission to the competition.
+
+Our data is in .csv format. You can get started with the competition and download the data here.
+
+Each row represents a passenger on the Titanic, and some information about them. Let's take a look at the columns:
+
+    PassengerId -- A numerical id assigned to each passenger.
+    Survived -- Whether the passenger survived (1), or didn't (0). We'll be making predictions for this column.
+    Pclass -- The class the passenger was in -- first class (1), second class (2), or third class (3).
+    Name -- the name of the passenger.
+    Sex -- The gender of the passenger -- male or female.
+    Age -- The age of the passenger. Fractional.
+    SibSp -- The number of siblings and spouses the passenger had on board.
+    Parch -- The number of parents and children the passenger had on board.
+    Ticket -- The ticket number of the passenger.
+    Fare -- How much the passenger paid for the ticker.
+    Cabin -- Which cabin the passenger was in.
+    Embarked -- Where the passenger boarded the Titanic.
+
+A good first step is to think logically about the columns and what we're trying to predict. What variables might logically affect the outcome of survived? (reading more about the Titanic might help here).
+
+We know that women and children were more likely to survive. Thus, Age and Sex are probably good predictors. It's also logical to think that passenger class might affect the outcome, as first class cabins were closer to the deck of the ship. Fare is tied to passenger class, and will probably be highly correlated with it, but might add some additional information. Number of siblings and parents/children will probably be correlated with survival one way or the other, as either there are more people to help you, or more people to think about and try to save.
+
+There's a less clear link between survival and columns like Embarked (maybe there is some information about how close to the top of the ship people's cabins were here), Ticket, and Name.
+
+This step is generally known as acquiring domain knowledge, and it fairly important to most machine learning tasks. We're looking to engineer the features so that we maximize the information we have about what we're trying to predict.
+
+
+
+
+
+2: Looking at the data
+
+We'll be using python 3, the pandas library, and scikit-learn to analyze our data and create a submission. We'll be interactively coding in code boxes, like the one you see below. If you aren't familiar with Python yet, you might want to look at our courses.
+
+A good second step is to look at high level descriptors of the data. In this case, we can use the pandas .describe() method to look at different characteristics of each numeric column.
+
+
+
+3: Missing data
+
+When you used .describe() on the titanic dataframe in the last screen, you might have noticed that the Age column has a count of 714 when all the other columns have a count of 891. This indicates that there are missing values in the Age column -- the count is of non-missing (null, NA, or not a number) values.
+
+This means that the data isn't perfectly clean, and we're going to have to clean it ourselves. We don't want to have to remove the rows with missing values, because more data helps us train a better algorithm. We also don't want to get rid of the whole column, as age is probably fairly important to our analysis.
+
+There are many strategies for cleaning up missing data, but a simple one is to just fill in all the missing values with the median of all the values in the column.
+
+We can select a single column by indexing the dataframe like a dictionary. 
+
+This gives us a pandas series:		titanic['Age']
+
+We can then use the .fillna method on the series to replace any missing values. .fillna takes one argument, the value to replace the missing values with.
+
+
+
+	In our case, we want to fill with the median of the column:
+
+	.fillna(titanic["Age"].median())
+
+
+	We then have to assign the result back to the column to replace it:
+
+	titanic["Age"] = titanic["Age"].fillna(titanic["Age"].median())
+
+
+
+4: Non-numeric columns
+
+When we used .describe() two screens ago, you might have also noticed that not all the columns were shown. Only the numeric columns were shown. Several of our columns are non-numeric, which is a problem when it comes time to make predictions -- we can't feed non-numeric columns into a machine learning algorithm and expect it to make sense of them.
+
+We have to either exclude our non-numeric columns when we train our algorithm (Name, Sex, Cabin, Embarked, and Ticket), or find a way to convert them to numeric columns.
+
+We'll ignore the Ticket, Cabin, and Name columns. There isn't much information we can extract from there. Most of the values in the cabin column are missing (only 204 values out of 891 rows), and it likely isn't a particularly informative column in the first place. The Ticket and Name columns are unlikely to tell us much without some domain knowledge about what the ticket numbers mean, and about which names correlate with characteristics like large or rich families.
+
+
+
+5: Converting the Sex column
+
+The Sex column is non-numeric, but we want to keep it around -- it could be very informative. We can convert it to a numeric column by replacing each gender with a numeric code. A machine learning algorithm will then be able to use these categories to make predictions.
+
+To do this, we first have to find all the unique genders in the column (we know male and female are there, but did whoever recorded the dataset use another code for missing values?). We'll also assign a code of 0 to male, and a code of 1 to female.
+
+	We can select all the male values in the Sex column with:
+
+	titanic.loc[titanic["Sex"] == "male", "Sex"]
+
+
+	We can then replace all these values with 0:
+
+	titanic.loc[titanic["Sex"] == "male", "Sex"] = 0
+
+
+
+
+6: Converting the Embarked column
+
+We now can convert the Embarked column to codes the same way we converted the Sex column. The unique values in Embarked are S, C, Q, and missing (nan). Each letter is an abbreviation of an embarkation port name.
+Instructions
+
+    The first step is to replace the missing values in the column.
+        The most common embarkation port is S, so let's assume everyone got on there.
+        Replace all the missing values in the Embarked column with S.
+
+    We'll assign the code 0 to S, 1 to C and 2 to Q.
+        Replace each value in the Embarked column with its corresponding code.
+
+
+
+
+7: On to machine learning!
+
+Now that we've cleaned up our data a bit, we're ready to explore some machine learning. Let's say our first few rows of data look like this:
+
+Age     Sex     Survived
+
+10      0       0
+
+5       1       1
+
+30      0       0
+
+If we wanted to make predictions about whether someone survived or not from the Age column, we could use a technique called linear regression. Linear regression follows the equation y=mx+b
+
+, where y is the value we're trying to predict, m is a coefficient called the slope, x is the value of a column, and b is a constant called the intercept.
+
+	We could make predictions by assigning -2 to m, and 20 to b. We'd get this:
+	
+	Age     Sex     Survived    Predictions
+
+	10      0       0           -2 * 10 + 20 = 0
+	
+5       1       1           -2 * 5 + 20 = 10
+	
+30      0       0           -2 * 30 + 20 = -40
+
+
+
+
+If we turn any prediction greater than 0 into 1, and any prediction 0 or less into 0, we'll end up with this:
+
+Age     Sex     Survived    Predictions
+
+10      0       0           0
+
+5       1       1           1
+
+30      0       0           0
+
+This simple model predicts survival fairly well. Linear regression can be a very powerful algorithm, but it has a few downsides:
+
+    If a column and an outcome aren't related linearly, it won't work well. For example, if older women don't survive as well, except women over 80, linear regression won't pick this up.
+    It can't give you survival probabilities, only absolute values indicating whether or not someone will survive.
+
+We'll talk about how to address both of these issues later on. For now, we'll learn how to calculate linear regression coefficients automatically, and how to use multiple columns to predict an outcome.
+
+
+
+
+
+8: Cross validation
+
+We can now use linear regression to make predictions on our training set.
+
+We want to train the algorithm on different data than we make predictions on. This is critical if we want to avoid overfitting. Overfitting is what happens when a model fits itself to "noise", not signal. Every dataset has its own quirks that don't exist in the full population. For example, if I asked you to predict the top speed of a car from its horsepower and other characteristics, and gave you a dataset that randomly had cars with very high top speeds, you would create a model that overstated speed. The way to figure out if your model is doing this is to evaluate its performance on data it hasn't been trained using.
+
+Every machine learning algorithm can overfit, although some (like linear regression) are much less prone to it. If you evaluate your algorithm on the same dataset that you train it on, it's impossible to know if it's performing well because it overfit itself to the noise, or if it actually is a good algorithm.
+
+Luckily, cross validation is a simple way to avoid overfitting. To cross validate, you split your data into some number of parts (or "folds"). Lets use 3 as an example. You then do this:
+
+    Combine the first two parts, train a model, make predictions on the third.
+
+    Combine the first and third parts, train a model, make predictions on the second.
+
+    Combine the second and third parts, train a model, make predictions on the first.
+
+This way, we generate predictions for the whole dataset without ever evaluating accuracy on the same data we train our model using.
+
+
+
+9: Making predictions
+
+We can use the excellent scikit-learn library to make predictions. We'll use a helper from sklearn to split the data up into cross validation folds, and then train an algorithm for each fold, and make predictions. At the end, we'll have a list of predictions, with each list item containing predictions for the corresponding fold.
+
+
+
+10: Evaluating error
+
+Now that we have predictions, we can evaluate our error.
+
+
+We'll first need to define an error metric, so we can figure out how accurate our model is. From the Kaggle competition description, the error metric is percentage of correct predictions. We'll use this same metric to evaluate our performance locally.
+
+The metric will basically involve finding the number of values in predictions that are the exact same as their counterparts in titanic["Survived"], and then dividing by the total number of passengers.
+
+Before we can do this, we need to combine the 3 sets of predictions into one column. Since each set of predictions is a numpy (python scientific computing library) array, we can use a numpy function to concatenate them into one.
+
+Instructions
+
+    Figure out what proportion of the values in predictions are the exact same as the values in titanic["Survived"].
+        This calculation should be left as a float (decimal) and assigned to the variable accuracy.
+
+
+11: Logistic regression
+
+We have our first predictions! They aren't very good, though, with only 78.3% accuracy. In the video, we mentioned a way to make linear regression output values between 0 and 1. This is a technique called logistic regression.
+
+One good way to think of logistic regression is that it takes the output of a linear regression, and maps it so it is between 0 and 1. The does this with the logit function. Passing any value through the logit function will map it to a value between 0 and 1 by "squeezing" the extreme values. This is perfect for us, because we only care about two outcomes.
+
+Sklearn has a class for logistic regression that we can use. We'll also make things easier by using an sklearn helper function to do all of our cross validation and evaluation for us.
+
+
+
+12: Processing the test set
+
+Our accuracy is decent, but not great. We can still try a few things to make it better, which we'll talk about in the next mission.
+
+But, we need to make a submission to the competition. To do this, we need to take the exact same steps on the test data that we took on the training data. If we don't do the exact same operations, then we won't be able to make valid predictions on it.
+
+These operations are all the changes we made to the columns before.
+
+
+	Instructions
+
+	Process titanic_test the same way we processed titanic:
+
+	- Replace the missing values in the "Age" column with the median age from the train set. The age has to be the exact same value we replaced the missing ages in the training set with (it can't be the median of the test set, because this is different). You should use titanic["Age"].median() to find the median.
+
+    		Replace any male values in the Sex column with 0, and any female values with 1.
+
+    		Fill any missing values in the Embarked column with S.
+
+    		In the Embarked column, replace S with 0, C with 1, and Q with 2.
+
+	We'll also need to replace a missing value in the Fare column.
+
+    		Use .fillna with the median of the column in the test set to replace this.
+
+    		There are no missing values in the Fare column of the training set, but test sets can sometimes be different.
+
+
+
+13: Generating a submission file
+
+Now we have everything we need to generate a submission for the competition!
+
+First, we have to train an algorithm on the training data. Then, we make predictions on the test set. Finally, we'll generate a csv file with the predictions and passenger ids.
+
+Once you finish all the steps in the code below, you can output to a csv by using submission.to_csv("kaggle.csv", index=False). This will give you everything you need to make a first submission -- it won't give you great accuracy, though (~.75).
+
+
+
+14: Next steps
+
+We just generated a submission file, but the accuracy isn't great when we submit (~.75). The score is lower on the test set than in our cross validation due to the fact that we're predicting on different data. In the next mission, we'll learn how to generate better features and use better models to increase our score.
+
